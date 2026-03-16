@@ -1,3 +1,31 @@
-videos/
+# AIOS Git Ignore
+__pycache__/
+*.pyc
+.env
+.memory/
+.agent/
+logs/
+
+# Media files
+*.mp4
+*.mkv
+*.webm
+*.avi
+*.ass
+*.json
+!backend/api/*.json
+!package.json
+
+# Workspace directories
+data/
 outputs/
+spaceofduy/data/
+spaceofduy/shorts/
 spaceofduy/videos/
+spaceofduy/projects/*/data/
+spaceofduy/projects/*/outputs/
+
+# OS/System
+.DS_Store
+Thumbs.db
+node_modules/

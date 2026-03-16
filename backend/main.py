@@ -10,7 +10,7 @@ import asyncio
 # Đảm bảo đường dẫn gốc được nhận diện
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from api import project, workflow, generate, deploy, review
+from api import project, workflow, generate, deploy, review, video_automation
 from core.file_manager import FileManager
 from core.skill_runner import SkillRunner
 from core.agent_engine import AgentEngine
@@ -112,6 +112,11 @@ app.include_router(workflow.router, prefix="/api/workflow", tags=["workflow"])
 app.include_router(generate.router, prefix="/api/generate", tags=["generate"])
 app.include_router(deploy.router, prefix="/api/deploy", tags=["deploy"])
 app.include_router(review.router, prefix="/api/review", tags=["review"])
+app.include_router(video_automation.router, prefix="/api/video", tags=["video"])
+
+# Mount static files for media
+app.mount("/api/video/stream/shorts", StaticFiles(directory=os.path.join(config.WORKSPACE_ROOT, "shorts")), name="shorts_stream")
+app.mount("/api/video/stream/videos", StaticFiles(directory=os.path.join(config.WORKSPACE_ROOT, "videos")), name="videos_stream")
 
 # --- Live Sync WebSocket ---
 @app.websocket("/ws/files")
