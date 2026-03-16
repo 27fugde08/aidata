@@ -1,4 +1,4 @@
-from .ai_router import AIRouter
+from .model_orchestrator import ModelOrchestrator
 from .file_manager import FileManager
 import re
 from typing import Dict
@@ -8,9 +8,9 @@ class CodeGenerator:
     Phối hợp AI và File System.
     Nhận prompt -> AI tạo code -> Ghi vào workspace.
     """
-    def __init__(self, ai_router: AIRouter, file_manager: FileManager):
-        self.ai = ai_router
-        self.fm = file_manager
+    def __init__(self, workspace_root: str):
+        self.orchestrator = ModelOrchestrator(workspace_root=workspace_root)
+        self.fm = FileManager(workspace_root)
 
     async def apply_ai_request(self, prompt: str, current_file: str = None):
         """Xử lý yêu cầu tạo hoặc chỉnh sửa code."""
@@ -22,7 +22,9 @@ class CodeGenerator:
             except:
                 pass
         
-        response = await self.ai.chat([{"role": "user", "content": prompt}], context)
+        # Determine if we should use local or cloud model
+        model = self.orchestrator.route_task(f"coding task: {prompt}")
+        response = await self.orchestrator.chat(prompt, model=model, system_instruction=context)
         
         # Parse output for [FILE: path]<code>[/FILE] pattern
         files_created = []
@@ -38,15 +40,3 @@ class CodeGenerator:
             "response": response,
             "files_modified": files_created
         }
-
-    async def create_new_project(self, prompt: str, project_name: str):
-        """Tạo dự án mới dựa trên mô tả AI."""
-        files = await self.ai.generate_project(prompt)
-        
-        for path, content in files.items():
-            if path == "error": continue
-            # Đảm bảo lưu trong thư mục dự án
-            full_path = f"{project_name}/{path}"
-            self.fm.write(full_path, content)
-            
-        return {"project": project_name, "files": list(files.keys())}

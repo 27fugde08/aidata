@@ -6,21 +6,28 @@ import sys
 
 # Thêm đường dẫn gốc để import core và config
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from core.ai_router import AIRouter
+from core.model_orchestrator import ModelOrchestrator
 from core.file_manager import FileManager
 from core.code_generator import CodeGenerator
-import config # Import cấu hình mới
+import config
 
 router = APIRouter()
 
-# Lấy cài đặt từ file config.py
-fm = FileManager(config.WORKSPACE_ROOT)
-ai = AIRouter(config.GEMINI_API_KEY)
-generator = CodeGenerator(ai, fm)
+# Unified AI Automation OS Core
+orchestrator = ModelOrchestrator(workspace_root=config.WORKSPACE_ROOT)
+generator = CodeGenerator(config.WORKSPACE_ROOT)
 
 class GenerateRequest(BaseModel):
     prompt: str
     current_file: Optional[str] = None
+
+@router.post("/")
+async def generate_code(req: GenerateRequest):
+    try:
+        res = await generator.apply_ai_request(req.prompt, req.current_file)
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/prompt")
 async def generate_code(req: GenerateRequest):

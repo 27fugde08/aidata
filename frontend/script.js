@@ -22,7 +22,8 @@ function showTowerView(viewId) {
         'system-monitor': 'System Monitor',
         'task-monitor': 'Task Monitor / Logs',
         'product-deployment': 'Product Deployment',
-        'video-engine': 'AI Video Engine'
+        'video-engine': 'AI Video Engine',
+        'file-manager': 'Workspace File Explorer'
     };
     document.getElementById('view-title').textContent = titles[viewId] || 'AIOS Tower';
 
@@ -34,6 +35,59 @@ function showTowerView(viewId) {
     if (viewId === 'product-deployment') loadDeployHistory();
     if (viewId === 'workflow-builder') loadWorkflows();
     if (viewId === 'video-engine') loadVideoLibrary();
+    if (viewId === 'file-manager') loadFiles();
+}
+
+// --- File Manager ---
+
+async function loadFiles(path = '') {
+    const list = document.getElementById('file-list');
+    list.innerHTML = '<div class="metric-sub">Scanning workspace...</div>';
+    
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/files?path=${path}`);
+        const data = await res.json();
+        
+        list.innerHTML = data.files.map(f => `
+            <div class="agent-card" style="padding: 10px; cursor: pointer; text-align: center;" onclick="${f.type === 'file' ? `editFile('${f.path}')` : `loadFiles('${f.path}')`}">
+                <i data-lucide="${f.type === 'file' ? 'file-text' : 'folder'}" style="margin-bottom: 5px; color: ${f.type === 'file' ? 'var(--text-dim)' : 'var(--accent)'}"></i>
+                <div style="font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${f.name}</div>
+            </div>
+        `).join('');
+        lucide.createIcons();
+    } catch (e) { list.innerHTML = 'File system offline.'; }
+}
+
+async function editFile(path) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/files/content?path=${path}`);
+        const data = await res.json();
+        
+        document.getElementById('editing-filename').textContent = path;
+        document.getElementById('file-content-editor').value = data.content;
+        document.getElementById('file-editor-panel').style.display = 'flex';
+        
+        // Scroll to editor
+        document.getElementById('file-editor-panel').scrollIntoView({ behavior: 'smooth' });
+    } catch (e) { alert('Could not read file.'); }
+}
+
+async function saveCurrentFile() {
+    const path = document.getElementById('editing-filename').textContent;
+    const content = document.getElementById('file-content-editor').value;
+    
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/files/content`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path, content })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            addLogEntry(`File saved: ${path}`, 'success');
+            alert('File saved successfully.');
+        }
+    } catch (e) { alert('Save failed.'); }
 }
 
 // --- Video Engine ---

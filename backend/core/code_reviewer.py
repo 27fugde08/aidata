@@ -1,14 +1,16 @@
-from .ai_router import AIRouter
+from .model_orchestrator import ModelOrchestrator
 from .file_manager import FileManager
 from typing import Dict, List
+import json
 
 class CodeReviewer:
     """
     Sử dụng AI để kiểm tra chất lượng code và bảo mật.
+    Uses ModelOrchestrator for advanced reasoning.
     """
-    def __init__(self, ai_router: AIRouter, file_manager: FileManager):
-        self.ai = ai_router
-        self.fm = file_manager
+    def __init__(self, workspace_root: str):
+        self.model_orchestrator = ModelOrchestrator(workspace_root=workspace_root)
+        self.fm = FileManager(workspace_root)
 
     async def review_file(self, file_path: str) -> Dict:
         """Kiểm tra một file cụ thể."""
@@ -37,9 +39,10 @@ class CodeReviewer:
             CHỈ TRẢ VỀ JSON.
             """
             
-            response_text = await self.ai.chat([{"role": "user", "content": prompt}])
+            # Use high-performance model for review
+            model = self.model_orchestrator.route_task("security review and code analysis")
+            response_text = await self.model_orchestrator.chat(prompt, model=model)
             
-            import json
             # Làm sạch chuỗi JSON từ AI
             clean_json = response_text.replace("```json", "").replace("```", "").strip()
             return json.loads(clean_json)

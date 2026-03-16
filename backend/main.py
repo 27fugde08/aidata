@@ -16,32 +16,22 @@ from core.skill_runner import SkillRunner
 from core.agent_engine import AgentEngine
 from core.watcher import Watcher
 from core.orchestrator import MultiAgentOrchestrator
-import config
-
 from core.scheduler import AgentOSScheduler
 from core.automation_scheduler import AutomationScheduler
 from core.deployer import DeploymentEngine
 from core.resource_manager import ResourceManager
-from core.video_downloader import DownloaderService
-from core.video_processor import ProcessorService
 import config
 
-# Khởi tạo AI Router trực tiếp từ module generate
-from api.generate import ai
+# Unified AI Automation OS Core
+orchestrator = MultiAgentOrchestrator(workspace_root=config.WORKSPACE_ROOT)
 
-app = FastAPI(title="Gemini AI IDE (SpaceOfDuy Edition)")
+app = FastAPI(title="AI Automation OS (AI Factory Edition)")
 
 # --- AI OS Services ---
 os_scheduler = AgentOSScheduler()
 automation_scheduler = AutomationScheduler(config.WORKSPACE_ROOT)
 resource_manager = ResourceManager(config.WORKSPACE_ROOT)
 deploy_engine = DeploymentEngine(config.WORKSPACE_ROOT)
-
-# Video Services
-VIDEOS_DIR = os.path.join(config.WORKSPACE_ROOT, "videos")
-SHORTS_DIR = os.path.join(config.WORKSPACE_ROOT, "shorts")
-downloader = DownloaderService(VIDEOS_DIR)
-processor = ProcessorService(SHORTS_DIR)
 
 @app.on_event("startup")
 async def startup_event():
@@ -115,7 +105,6 @@ app.add_middleware(
 # Khởi tạo core
 fm = FileManager(config.WORKSPACE_ROOT)
 runner = SkillRunner(config.WORKSPACE_ROOT)
-agent = AgentEngine(config.WORKSPACE_ROOT)
 
 # Đăng ký các route API chuyên dụng
 app.include_router(project.router, prefix="/api/projects", tags=["projects"])
@@ -146,71 +135,117 @@ async def websocket_endpoint(websocket: WebSocket):
 # --- Endpoints tương thích với Frontend ---
 
 @app.post("/api/video/download")
-async def video_download(data: dict = Body(...)):
+async def video_download(background_tasks: BackgroundTasks, data: dict = Body(...)):
     url = data.get("url")
-    if not url: raise HTTPException(status_code=400, detail="URL required")
-    # Downloader.download is currently synchronous, run in thread
-    result = await asyncio.to_thread(downloader.download, url)
-    if result["status"] == "error": raise HTTPException(status_code=500, detail=result["error"])
-    return result
+    if not url: return {"status": "error", "message": "URL is required"}
+    
+    target_dir = os.path.join(config.WORKSPACE_ROOT, "videos")
+    os.makedirs(target_dir, exist_ok=True)
+    
+    async def run_download():
+        import subprocess
+        # Sử dụng yt-dlp để tải video
+        cmd = [
+            "yt-dlp", 
+            "-o", f"{target_dir}/%(title)s.%(ext)s", 
+            "--no-playlist",
+            "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+            url
+        ]
+        process = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        stdout, stderr = await process.communicate()
+        if process.returncode != 0:
+            from core.event_engine import events
+            events.log("ERROR", f"Download failed: {stderr.decode()}")
+            
+    background_tasks.add_task(run_download)
+    return {"status": "success", "message": "Download started in background"}
 
 @app.get("/api/video/list")
 def list_video_library():
-    videos = []
-    if os.path.exists(VIDEOS_DIR):
-        for f in os.listdir(VIDEOS_DIR):
-            if f.endswith(".mp4"):
-                videos.append({"name": f, "url": f"/videos/{f}", "size": os.path.getsize(os.path.join(VIDEOS_DIR, f))})
-    shorts = []
-    if os.path.exists(SHORTS_DIR):
-        for f in os.listdir(SHORTS_DIR):
-            if f.endswith(".mp4"):
-                shorts.append({"name": f, "url": f"/shorts/{f}", "size": os.path.getsize(os.path.join(SHORTS_DIR, f))})
-    return {"videos": videos, "shorts": shorts}
+    video_dir = os.path.join(config.WORKSPACE_ROOT, "videos")
+    shorts_dir = os.path.join(config.WORKSPACE_ROOT, "shorts")
+    
+    os.makedirs(video_dir, exist_ok=True)
+    os.makedirs(shorts_dir, exist_ok=True)
+    
+    def get_files(directory):
+        files = []
+        for f in os.listdir(directory):
+            if f.endswith((".mp4", ".mkv", ".avi", ".webm")):
+                path = os.path.join(directory, f)
+                stats = os.stat(path)
+                files.append({
+                    "name": f,
+                    "size": stats.st_size,
+                    "url": f"/api/video/stream/{os.path.basename(directory)}/{f}"
+                })
+        return files
+
+    return {
+        "videos": get_files(video_dir),
+        "shorts": get_files(shorts_dir)
+    }
+
+@app.get("/api/video/stream/{folder}/{filename}")
+async def stream_video(folder: str, filename: str):
+    from fastapi.responses import FileResponse
+    path = os.path.join(config.WORKSPACE_ROOT, folder, filename)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(path)
 
 @app.post("/api/video/clip")
-async def create_video_clip(background_tasks: BackgroundTasks, data: dict = Body(...)):
+async def video_clip(background_tasks: BackgroundTasks, data: dict = Body(...)):
     filename = data.get("filename")
     start = data.get("start", 0)
-    end = data.get("end", 60)
+    end = data.get("end", 30)
     
-    input_path = os.path.join(VIDEOS_DIR, filename)
-    if not os.path.exists(input_path): raise HTTPException(status_code=404, detail="File not found")
+    source_path = os.path.join(config.WORKSPACE_ROOT, "videos", filename)
+    target_dir = os.path.join(config.WORKSPACE_ROOT, "shorts")
+    os.makedirs(target_dir, exist_ok=True)
     
-    # Run processing in background
-    async def run_proc():
-        await processor.process_short(input_path, start, end)
+    output_filename = f"short_{filename}"
+    output_path = os.path.join(target_dir, output_filename)
+    
+    async def run_clip():
+        import subprocess
+        # FFmpeg command to clip and crop to 9:16 (vertical)
+        # crop=ih*9/16:ih to center crop for portrait
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", source_path,
+            "-ss", str(start),
+            "-t", str(end - start),
+            "-vf", "crop=ih*9/16:ih,scale=720:1280",
+            "-c:v", "libx264", "-crf", "23", "-preset", "veryfast",
+            "-c:a", "aac", "-b:a", "128k",
+            output_path
+        ]
+        process = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        await process.communicate()
         
-    background_tasks.add_task(run_proc)
-    return {"status": "processing", "message": "Short is being generated in the background."}
+    background_tasks.add_task(run_clip)
+    return {"status": "success", "message": f"Clipping job for {filename} started"}
 
-# Static Mounting
-app.mount("/videos", StaticFiles(directory=VIDEOS_DIR), name="videos")
-app.mount("/shorts", StaticFiles(directory=SHORTS_DIR), name="shorts")
-
-@app.post("/api/agent/work")
 async def agent_work(data: dict = Body(...)):
     """
-    AI Agent tự thực hiện task phức tạp (Debug, Terminal, Build Project).
+    AI Agent tự thực hiện task phức tạp qua Mission Controller.
     """
     prompt = data.get("prompt", "")
-    api_key = data.get("api_key")
-    mode = data.get("mode", "single") # single | workflow
+    mode = data.get("mode", "mission") # mission | workflow
     
     if mode == "workflow":
-        # Chạy quy trình Multi-Agent
-        orchestrator = MultiAgentOrchestrator(config.WORKSPACE_ROOT, api_key or config.GEMINI_API_KEY)
         async def workflow_gen():
-            async for step in orchestrator.run_workflow("Full Feature Development", prompt):
+            async for step in orchestrator.run_workflow("Custom Workflow", prompt):
                 yield step
         return StreamingResponse(workflow_gen(), media_type="text/plain")
     else:
-        # Chạy Single Agent (như cũ)
-        current_agent = AgentEngine(config.WORKSPACE_ROOT, api_key=api_key)
-        async def agent_gen():
-            async for step in current_agent.work_stream(prompt):
-                yield step
-        return StreamingResponse(agent_gen(), media_type="text/plain")
+        # Chạy Mission Controller mới
+        async def mission_gen():
+            async for chunk in orchestrator.start_mission(prompt):
+                yield chunk
+        return StreamingResponse(mission_gen(), media_type="text/plain")
 
 @app.get("/api/files")
 def list_files_compat(path: str = ""):
@@ -258,119 +293,28 @@ async def run_command_compat(data: dict = Body(...)):
 @app.post("/api/ai/chat")
 async def ai_chat_compat(data: dict = Body(...)):
     """
-    Endpoint chat CHỈ DÙNG GEMINI.
-    Bỏ qua mọi cấu hình OpenAI từ web.
+    Endpoint chat sử dụng Hybrid Router.
     """
     messages = data.get("messages", [])
+    if not messages: return StreamingResponse(iter(["No messages"]), media_type="text/plain")
     
+    user_input = messages[-1]['content']
     try:
-        # Sử dụng Gemini Router đã cấu hình
-        response_text = await ai.chat(messages)
+        model = orchestrator.model_router.route_task(user_input)
+        response_text = await orchestrator.model_router.chat(user_input, model=model)
         
-        async def gemini_gen():
+        async def gen():
             yield response_text
             
-        return StreamingResponse(gemini_gen(), media_type="text/plain")
+        return StreamingResponse(gen(), media_type="text/plain")
     except Exception as e:
         async def err_gen():
-            yield f"❌ Lỗi Gemini: {str(e)}"
+            yield f"❌ Error: {str(e)}"
         return StreamingResponse(err_gen(), media_type="text/plain")
 
 @app.get("/")
 def home():
-    return {"status": "Gemini AI IDE Running", "workspace": config.WORKSPACE_ROOT}
-
-# --- Skill Marketplace API ---
-
-@app.get("/api/skills/archive")
-def list_archived_skills():
-    archive_dir = os.path.join(config.WORKSPACE_ROOT, "..", ".skills_archive")
-    if not os.path.exists(archive_dir):
-        return {"skills": []}
-    
-    skills = []
-    for f in os.listdir(archive_dir):
-        if f.endswith(".py"):
-            skills.append({
-                "name": f,
-                "path": f,
-                "description": f"Specialized AI Skill: {f}"
-            })
-    return {"skills": skills}
-
-@app.get("/api/skills/installed")
-def list_installed_skills():
-    skills_dir = os.path.join(config.WORKSPACE_ROOT, "skills")
-    if not os.path.exists(skills_dir):
-        return {"skills": []}
-    
-    skills = []
-    for f in os.listdir(skills_dir):
-        if f.endswith(".py"):
-            skills.append({
-                "name": f,
-                "path": f
-            })
-    return {"skills": skills}
-
-@app.get("/api/project/memory")
-def get_project_memory():
-    from core.memory_manager import MemoryManager
-    memory = MemoryManager(config.WORKSPACE_ROOT)
-    return memory.memory
-
-@app.post("/api/skills/install")
-def install_skill(data: dict = Body(...)):
-    skill_name = data.get("name")
-    archive_dir = os.path.join(config.WORKSPACE_ROOT, "..", ".skills_archive")
-    skills_dir = os.path.join(config.WORKSPACE_ROOT, "skills")
-    
-    if not os.path.exists(skills_dir):
-        os.makedirs(skills_dir)
-        
-    src = os.path.join(archive_dir, skill_name)
-    dst = os.path.join(skills_dir, skill_name)
-    
-    if os.path.exists(src):
-        import shutil
-        shutil.copy(src, dst)
-        return {"status": "success", "message": f"Skill {skill_name} installed."}
-    else:
-        raise HTTPException(status_code=404, detail="Skill not found in archive")
-
-# --- Automation Marketplace API ---
-
-@app.get("/api/automations/store")
-def list_automation_recipes():
-    # Giả lập danh sách các công thức tự động hóa từ archive
-    return {
-        "recipes": [
-            {
-                "id": "full-stack-gen",
-                "name": "Full-stack App Generator",
-                "description": "Tạo nhanh ứng dụng FastAPI + React.",
-                "steps": ["Architect", "Backend Dev", "Frontend Dev", "Tester"]
-            },
-            {
-                "id": "security-audit",
-                "name": "Security Auditor",
-                "description": "Quét lỗ hổng bảo mật và đề xuất bản vá.",
-                "steps": ["Security Agent", "Reviewer"]
-            },
-            {
-                "id": "doc-generator",
-                "name": "Documentation Bot",
-                "description": "Tự động viết README và API Docs.",
-                "steps": ["Architect", "Technical Writer"]
-            }
-        ]
-    }
-
-@app.post("/api/automations/install")
-def install_automation(data: dict = Body(...)):
-    recipe_id = data.get("id")
-    # Logic để nạp recipe vào Workflow Builder
-    return {"status": "success", "recipe_id": recipe_id}
+    return {"status": "AI Automation OS Running", "workspace": config.WORKSPACE_ROOT}
 
 if __name__ == "__main__":
     import uvicorn
