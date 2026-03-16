@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Control Tower | AIOS Operations</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Markdown & Highlight.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <div class="control-tower-app">
+        <!-- Sidebar Navigation -->
+        <aside class="tower-sidebar">
+            <div class="sidebar-logo">
+                <i data-lucide="radar" class="logo-icon"></i>
+                <span class="logo-text">AI CONTROL TOWER</span>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" onclick="showTowerView('command-center')" title="Command Center">
+                    <i data-lucide="message-square"></i> <span>Command Center</span>
+                </div>
+                <div class="nav-item" onclick="showTowerView('agents-monitor')" title="Agents Monitor">
+                    <i data-lucide="users"></i> <span>Agents Monitor</span>
+                </div>
+                <div class="nav-item" onclick="showTowerView('workflow-builder')" title="Workflow Builder">
+                    <i data-lucide="git-branch"></i> <span>Workflow Builder</span>
+                </div>
+                <div class="nav-item" onclick="showTowerView('automation-store')" title="Automation Store">
+                    <i data-lucide="shopping-cart"></i> <span>Automation Store</span>
+                </div>
+                <div class="nav-item" onclick="showTowerView('system-monitor')" title="System Monitor">
+                    <i data-lucide="activity"></i> <span>System Monitor</span>
+                </div>
+                <div class="nav-item" onclick="showTowerView('video-engine')" title="Video Engine">
+                    <i data-lucide="video"></i> <span>Video Engine</span>
+                </div>
+                <div class="nav-item" onclick="showTowerView('task-monitor')" title="Task Monitor / Logs">
+                    <i data-lucide="terminal"></i> <span>Task Monitor</span>
+                </div>
+                <div class="nav-item" onclick="showTowerView('product-deployment')" title="Product Deployment">
+                    <i data-lucide="rocket"></i> <span>Deployment</span>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="nav-item" onclick="openSettings()">
+                    <i data-lucide="settings"></i> <span>Settings</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Panel -->
+        <main class="tower-main">
+            <!-- Header / Status Bar -->
+            <header class="tower-header">
+                <div class="header-breadcrumb" id="view-title">Command Center</div>
+                <div class="header-status">
+                    <span class="status-badge live">
+                        <span class="pulse-dot"></span> AIOS KERNEL LIVE
+                    </span>
+                    <span class="status-badge" id="active-tasks-badge">0 ACTIVE TASKS</span>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="tower-content" id="tower-content">
+                
+                <!-- View 1: Command Center -->
+                <div id="view-command-center" class="tower-view active">
+                    <div class="chat-container">
+                        <div class="chat-history" id="chat-history">
+                            <div class="chat-msg ai">
+                                <div class="msg-content">Welcome to the Control Tower, Commander. All systems are operational. Awaiting instructions.</div>
+                            </div>
+                        </div>
+                        <div class="chat-input-wrapper">
+                            <textarea id="chat-input" placeholder="Type a command (e.g. /team Build a newsletter scraper)..." onkeydown="handleChatInput(event)"></textarea>
+                            <button class="send-btn" onclick="sendChat()"><i data-lucide="send"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View 2: Agents Monitor -->
+                <div id="view-agents-monitor" class="tower-view">
+                    <div class="agents-grid" id="agents-grid">
+                        <!-- Architect Card -->
+                        <div class="agent-card" id="agent-architect">
+                            <div class="agent-header">
+                                <div class="agent-icon"><i data-lucide="layout"></i></div>
+                                <div class="agent-info">
+                                    <div class="agent-name">Architect</div>
+                                    <div class="agent-status status-idle" id="status-architect">Idle</div>
+                                </div>
+                            </div>
+                            <div class="agent-task" id="task-architect">Waiting for mission...</div>
+                        </div>
+                        <!-- Developer Card -->
+                        <div class="agent-card" id="agent-developer">
+                            <div class="agent-header">
+                                <div class="agent-icon"><i data-lucide="code-2"></i></div>
+                                <div class="agent-info">
+                                    <div class="agent-name">Developer</div>
+                                    <div class="agent-status status-idle" id="status-developer">Idle</div>
+                                </div>
+                            </div>
+                            <div class="agent-task" id="task-developer">Standing by.</div>
+                        </div>
+                        <!-- Tester Card -->
+                        <div class="agent-card" id="agent-tester">
+                            <div class="agent-header">
+                                <div class="agent-icon"><i data-lucide="check-square"></i></div>
+                                <div class="agent-info">
+                                    <div class="agent-name">Tester</div>
+                                    <div class="agent-status status-idle" id="status-tester">Idle</div>
+                                </div>
+                            </div>
+                            <div class="agent-task" id="task-tester">No active bugs to hunt.</div>
+                        </div>
+                        <!-- Reviewer Card -->
+                        <div class="agent-card" id="agent-reviewer">
+                            <div class="agent-header">
+                                <div class="agent-icon"><i data-lucide="search"></i></div>
+                                <div class="agent-info">
+                                    <div class="agent-name">Reviewer</div>
+                                    <div class="agent-status status-idle" id="status-reviewer">Idle</div>
+                                </div>
+                            </div>
+                            <div class="agent-task" id="task-reviewer">Everything looks good.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View 3: Workflow Builder -->
+                <div id="view-workflow-builder" class="tower-view">
+                    <div class="view-header">
+                        <h2>Workflow Designer</h2>
+                        <div class="toolbar">
+                            <button class="btn btn-secondary" onclick="addWorkflowStep()"><i data-lucide="plus"></i> Add Node</button>
+                            <button class="btn btn-primary" onclick="executeWorkflow()"><i data-lucide="play"></i> Deploy Workflow</button>
+                        </div>
+                    </div>
+                    <div class="workflow-canvas" id="workflow-canvas">
+                        <!-- Visual nodes will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- View 4: System Monitor -->
+                <div id="view-system-monitor" class="tower-view">
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">CPU LOAD</div>
+                            <div class="metric-value" id="val-cpu">0%</div>
+                            <div class="metric-gauge"><div class="gauge-fill" id="fill-cpu" style="width: 0%"></div></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">RAM USAGE</div>
+                            <div class="metric-value" id="val-ram">0GB</div>
+                            <div class="metric-gauge"><div class="gauge-fill" id="fill-ram" style="width: 0%"></div></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">DOCKER CONTAINERS</div>
+                            <div class="metric-value" id="val-docker">0</div>
+                            <div class="metric-sub">Active instances</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">TOKEN CONSUMPTION</div>
+                            <div class="metric-value" id="val-tokens">0</div>
+                            <div class="metric-sub">Total across all LLMs</div>
+                        </div>
+                    </div>
+                    <div class="active-tasks-panel">
+                        <h3>ACTIVE AI PROCESSES</h3>
+                        <div id="os-process-list" class="process-list">
+                            <!-- Process items -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View 5: Task Monitor / Logs -->
+                <div id="view-task-monitor" class="tower-view">
+                    <div class="logs-container">
+                        <div class="logs-header">
+                            <span>SYSTEM EVENT STREAM</span>
+                            <button class="btn-clear" onclick="clearLogs()"><i data-lucide="trash-2"></i></button>
+                        </div>
+                        <div class="logs-body" id="logs-view">
+                            <!-- Logs will stream here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View 6: Automation Store -->
+                <div id="view-automation-store" class="tower-view">
+                    <div class="store-grid" id="automation-store-grid">
+                        <!-- Templates will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- View 8: Video Engine -->
+                <div id="view-video-engine" class="tower-view">
+                    <div class="video-engine-container">
+                        <div class="video-download-form glass-panel">
+                            <h3>Scrape New Media</h3>
+                            <div class="input-group">
+                                <input type="text" id="video-url-input" placeholder="Paste YouTube, TikTok, or FB URL...">
+                                <button class="btn btn-primary" onclick="downloadVideoEngine()"><i data-lucide="download"></i> FETCH</button>
+                            </div>
+                            <div id="video-engine-status" class="status-text">Ready to download.</div>
+                        </div>
+
+                        <div class="video-library-section">
+                            <div class="section-header">
+                                <h3>SOURCE LIBRARY</h3>
+                                <button class="btn-refresh" onclick="loadVideoLibrary()"><i data-lucide="rotate-cw"></i></button>
+                            </div>
+                            <div id="video-library-grid" class="video-grid">
+                                <!-- Videos -->
+                            </div>
+                        </div>
+
+                        <div class="shorts-library-section">
+                            <div class="section-header">
+                                <h3>PROCESSED SHORTS (9:16)</h3>
+                            </div>
+                            <div id="shorts-library-grid" class="video-grid">
+                                <!-- Shorts -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="settings-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <header>
+                <h2>Configuration</h2>
+                <i data-lucide="x" onclick="closeSettings()" class="close-btn"></i>
+            </header>
+            <div class="modal-body">
+                <div class="settings-group">
+                    <label>Gemini API Key</label>
+                    <input type="password" id="gemini-key">
+                </div>
+                <div class="settings-group">
+                    <label>OpenAI API Key</label>
+                    <input type="password" id="openai-key">
+                </div>
+                <button class="btn btn-primary btn-block" onclick="saveSettings()">Save Configuration</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

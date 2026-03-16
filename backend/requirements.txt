@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+python-multipart
+apscheduler
+google-generativeai
+numpy
+psutil
