@@ -1,0 +1,15 @@
+{
+  "id": "com.aios.video-generator",
+  "version": "1.0.0",
+  "name": "AI Video Generator",
+  "description": "Auto-generate viral videos and shorts from URLs using FFmpeg and AI.",
+  "author": "SpaceOfDuy",
+  "pricing": "premium",
+  "permissions": [
+    "filesystem.read",
+    "filesystem.write",
+    "network.download"
+  ],
+  "entry_point": "main.py",
+  "class": "VideoGeneratorPlugin"
+}

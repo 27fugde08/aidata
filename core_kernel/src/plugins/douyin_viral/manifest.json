@@ -1,0 +1,15 @@
+{
+  "id": "com.aios.douyin-viral",
+  "version": "1.0.0",
+  "name": "Douyin Viral Hunter",
+  "description": "Autonomous system to hunt, download and process viral Douyin/TikTok videos.",
+  "author": "AIOS Kernel",
+  "pricing": "enterprise",
+  "permissions": [
+    "network.download",
+    "filesystem.write",
+    "filesystem.read"
+  ],
+  "entry_point": "main.py",
+  "class": "DouyinViralPlugin"
+}
