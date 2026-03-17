@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+python-multipart
+apscheduler
+google-generativeai
+numpy
+psutil
+ollama
+chromadb
+sentence-transformers
+tenacity
+httpx
+openai
+anthropic
+beautifulsoup4
+duckduckgo_search
