@@ -1,0 +1,44 @@
+# AIOS Core & Apps Dependencies
+
+# Frameworks & Servers
+fastapi
+uvicorn
+python-multipart
+httpx
+
+# Database & Storage
+chromadb
+numpy
+
+# AI & LLM
+google-generativeai
+openai
+anthropic
+ollama
+sentence-transformers
+torch
+mediapipe
+langgraph
+langchain
+langchain-google-genai
+
+# Utilities
+python-dotenv
+tenacity
+psutil
+beautifulsoup4
+duckduckgo_search
+schedule  # For automation scheduling if needed
+
+# Multimedia Processing
+yt-dlp
+moviepy>=2.0.0
+opencv-python
+librosa
+tiktok-uploader  # Check if this package is available/maintained
+playwright
+
+# Monitoring & Scaling
+apscheduler
+celery
+redis

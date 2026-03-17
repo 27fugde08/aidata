@@ -1,0 +1,53 @@
+services:
+  # 1. Message Broker (Redis)
+  redis:
+    image: redis:alpine
+    container_name: aios-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # 2. Main API Kernel (Orchestrator)
+  aios-kernel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aios-kernel
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+      - ./logs:/app/logs
+      - ./.env:/app/.env
+    environment:
+      - WORKSPACE_ROOT=/app/storage
+      - REDIS_URL=redis://redis:6379/0
+      - C_FORCE_ROOT=1  # Allow running as root in container
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/system/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 3. Scalable Worker Swarm (The Muscles)
+  aios-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # No fixed container_name to allow scaling
+    command: ["celery", "-A", "core_kernel.src.worker.celery_app", "worker", "--loglevel=info"]
+    volumes:
+      - ./storage:/app/storage
+      - ./logs:/app/logs
+      - ./.env:/app/.env
+    environment:
+      - WORKSPACE_ROOT=/app/storage
+      - REDIS_URL=redis://redis:6379/0
+      - C_FORCE_ROOT=1
+    depends_on:
+      - redis
+      - aios-kernel
+    restart: unless-stopped

@@ -1,31 +1,46 @@
 # AIOS Git Ignore
+
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
-.env
-.memory/
-.agent/
-logs/
+*.py[cod]
+*$py.class
 
-# Media files
-*.mp4
-*.mkv
-*.webm
-*.avi
-*.ass
-*.json
-!backend/api/*.json
-!package.json
-
-# Workspace directories
-data/
-outputs/
-spaceofduy/data/
-spaceofduy/shorts/
-spaceofduy/videos/
-spaceofduy/projects/*/data/
-spaceofduy/projects/*/outputs/
-
-# OS/System
+# OS generated files
 .DS_Store
 Thumbs.db
-node_modules/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Data & Storage (CRITICAL: Ignore large binaries)
+storage/
+data/
+spaceofduy/
+test_workspace/
+*.sqlite3
+*.sqlite
+*.db
+
+# Logs
+logs/
+*.log
+
+# Multimedia
+*.mp4
+*.mp3
+*.wav
+*.mov
+*.avi
+*.ass
+*.srt
+
+# Docker
+.dockerignore
+
+# IDEs
+.vscode/
+.idea/
