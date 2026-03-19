@@ -1,0 +1,12 @@
+# AIOS Docker Ignore
+__pycache__
+.git
+.venv
+.env
+storage/
+logs/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+Thumbs.db

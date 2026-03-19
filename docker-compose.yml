@@ -1,53 +1,107 @@
 services:
-  # 1. Message Broker (Redis)
+  postgres:
+    image: postgres:15
+    container_name: aios-postgres
+    environment:
+      POSTGRES_USER: aios
+      POSTGRES_PASSWORD: aios
+      POSTGRES_DB: aios
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - aios-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aios"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   redis:
     image: redis:alpine
     container_name: aios-redis
     ports:
       - "6379:6379"
-    restart: unless-stopped
+    networks:
+      - aios-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
-  # 2. Main API Kernel (Orchestrator)
-  aios-kernel:
+  backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
-    container_name: aios-kernel
+    container_name: aios-backend
     ports:
       - "8000:8000"
-    volumes:
-      - ./storage:/app/storage
-      - ./logs:/app/logs
-      - ./.env:/app/.env
     environment:
-      - WORKSPACE_ROOT=/app/storage
-      - REDIS_URL=redis://redis:6379/0
-      - C_FORCE_ROOT=1  # Allow running as root in container
+      - DATABASE_URL=postgresql+asyncpg://aios:aios@postgres:5432/aios
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     depends_on:
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    networks:
+      - aios-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/system/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
-  # 3. Scalable Worker Swarm (The Muscles)
-  aios-worker:
+  worker:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
-    # No fixed container_name to allow scaling
-    command: ["celery", "-A", "core_kernel.src.worker.celery_app", "worker", "--loglevel=info"]
-    volumes:
-      - ./storage:/app/storage
-      - ./logs:/app/logs
-      - ./.env:/app/.env
+    container_name: aios-worker
+    command: celery -A app.core.celery_app.celery_app worker --loglevel=info
     environment:
-      - WORKSPACE_ROOT=/app/storage
-      - REDIS_URL=redis://redis:6379/0
-      - C_FORCE_ROOT=1
+      - DATABASE_URL=postgresql+asyncpg://aios:aios@postgres:5432/aios
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     depends_on:
-      - redis
-      - aios-kernel
+      backend:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    networks:
+      - aios-network
     restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: aios-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - aios-network
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend
+
+networks:
+  aios-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

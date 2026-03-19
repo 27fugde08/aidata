@@ -1,108 +1,107 @@
-# AIOS - AI Operating System Kernel (Enterprise Edition 2025)
+# AIOS Enterprise v2.2.0 (Day 2 Update)
 
-AIOS is a modular, high-performance monorepo designed for orchestrating autonomous AI agents, managing distributed workflows, and automating multi-platform content creation (Douyin, TikTok, YouTube).
+## 🧠 AIOS: Autonomous Operating System for AI Agents
+**AIOS** is a modular, kernel-based operating system designed to orchestrate independent AI apps (microservices) into a unified automation ecosystem.
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Key Features (v2.2.0)
+- **Modular Monorepo:** Separate `core` and `apps` architecture.
+- **Micro-Kernel Architecture:** Apps run as independent Docker containers, controlled by the AIOS Kernel.
+- **Dynamic App Discovery:** The Kernel automatically discovers and integrates available apps.
+- **Task Queue & Orchestration:** Centralized command center for managing complex, multi-step missions.
+- **Independent Control:** Run AIOS as a standalone orchestrator that controls all satellite projects.
 
-### 1. Prerequisites
-- **Python**: 3.10+
-- **Docker & Docker Compose**: (Recommended for isolated execution)
-- **API Keys**: Google Gemini (Required), OpenAI/Anthropic (Optional)
+---
 
-### 2. Setup Environment
+## 🛠️ Architecture Overview
+
+The system is composed of the following independent services:
+
+1.  **AIOS Kernel (`aios-kernel`):** The central brain, API gateway, and orchestrator.
+2.  **AIOS Worker Swarm (`aios-worker`):** Scalable Celery workers for heavy tasks.
+3.  **Redis (`aios-redis`):** Message broker for inter-service communication.
+4.  **YouTube Shorts (`aios-app-youtube`):** Independent service for YouTube Shorts automation.
+5.  **YouTube Enterprise (`aios-app-youtube-ent`):** Enterprise-grade video engine.
+
+---
+
+## 📦 Installation & Usage (Docker)
+
+The recommended way to run AIOS Enterprise is via Docker Compose. This ensures all apps run in isolated environments with their specific dependencies.
+
+### Prerequisites
+- Docker & Docker Compose
+- Python 3.10+ (for local development)
+
+### 1. Build and Run All Services
 ```bash
-# Install dependencies locally
-pip install -r requirements.txt
-
-# Configure Environment Variables
-cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY
-```
-
-### 3. Run the Application
-
-#### Option A: Docker Execution (Production Ready)
-This starts the Kernel, Redis broker, and a scalable Worker Swarm.
-```bash
-# Build and Start everything
 docker-compose up --build -d
-
-# Scale workers if needed
-docker-compose up -d --scale aios-worker=3
-
-# View Logs
-docker logs -f aios-kernel
 ```
 
-#### Option B: Local Execution (Development)
+This will start:
+- **Kernel API:** http://localhost:8000
+- **YouTube Service:** http://localhost:8002
+- **Enterprise Service:** http://localhost:8003
+
+### 2. Check System Health
+You can check the status of the entire ecosystem via the Kernel:
 ```bash
-# Start the unified manager
-python manage.py runserver
+curl http://localhost:8000/api/v1/system/health
+```
 
-# Run the test suite
-python manage.py test
+### 3. Independent Control Mode
+To demonstrate AIOS controlling other apps programmatically, run the provided script:
+```bash
+python scripts/aios_independent_control.py
+```
+This script connects to the Kernel and instructs it to orchestrate tasks across the available apps.
+
+---
+
+## 🔧 Local Development (Without Docker)
+
+If you prefer to run components manually:
+
+1.  **Install Dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+2.  **Start the Kernel:**
+    ```bash
+    python manage.py runserver
+    ```
+
+3.  **Run an App Independently:**
+    ```bash
+    cd apps/youtube
+    uvicorn main:app --port 8002
+    ```
+
+---
+
+## 📂 Directory Structure
+
+```
+.
+├── apps/                   # Modular Applications (Microservices)
+│   ├── youtube/            # YouTube Shorts App
+│   ├── youtube_ent/        # Enterprise Video Engine
+│   └── ...
+├── core/                   # AIOS Central Kernel
+│   ├── api/                # Kernel API Endpoints
+│   ├── shared/             # Shared Configuration & Utilities
+│   └── ...
+├── storage/                # Centralized Persistent Data
+│   ├── db/                 # Databases
+│   ├── logs/               # System Logs
+│   └── outputs/            # Generated Media
+├── docker/                 # Deployment Configurations
+└── manage.py               # Unified Entry Point CLI
 ```
 
 ---
 
-## 🏛️ System Architecture
-
-AIOS is built on a **Micro-Kernel** philosophy, ensuring the core remains stable while external apps operate as isolated plugins.
-
-### 1. AI Core Engine
-- **Engine**: Google Gemini 2.0 Flash (Latest 2025 version).
-- **Orchestration**: Integrated **LangGraph** for stateful, complex multi-agent reasoning.
-- **Memory**: Dual-layer system with short-term context and long-term **Vector Memory (ChromaDB)**.
-
-### 2. Distributed Infrastructure
-- **Task Queue**: Powered by **Redis** and **Celery** for asynchronous, non-blocking execution.
-- **Auto-Scaling**: Horizontal scaling of Worker nodes via Docker to handle high-volume video rendering or AI research.
-- **Real-time Comms**: **Server-Sent Events (SSE)** for live log streaming and "Thought Traces" to the frontend.
-
-### 3. AI Web IDE & Skills
-- **Integrated IDE**: Monaco-based editor with syntax highlighting and terminal access.
-- **Dynamic Skills**: Python-based skills loaded at runtime from the `storage/skills` directory.
-
----
-
-## 📂 Project Structure
-
-```text
-root/
-├── core_kernel/          # The Heart of AIOS
-│   └── src/
-│       ├── api/          # REST Endpoints (Projects, Queue, System)
-│       ├── core/         # Logic (AgentEngine, LangGraph Orchestrator)
-│       └── shared/       # Configuration & Real-time Logger
-├── apps/                 # Modular Applications (Isolated Plugins)
-│   ├── douyin_automation/
-│   └── youtube_shorts/
-├── frontend/             # Control Tower Dashboard (Vanilla JS Reactive SPA)
-├── storage/              # Persistent Data (SQLite, JSON State, Outputs)
-├── manage.py             # Unified CLI Management Script
-└── docker-compose.yml    # Enterprise Orchestration
-```
-
----
-
-## 🛠 Features
-
-- **Dynamic App Discovery**: Apps in `apps/` are automatically detected and mounted without modifying the core.
-- **Isolated Execution**: Crashes in external apps do not affect the stability of the AIOS Kernel.
-- **Bento Grid Dashboard**: High-density UI for monitoring system health (CPU/RAM), logs, and agent reasoning.
-- **Persistent State**: System state is saved to `kernel_state.json`, ensuring data survives restarts.
-
----
-
-## 📚 Contributing
-
-1. **Modular Apps**: Add new features as folders in `apps/` with an `api/` subfolder containing a `router` object.
-2. **Testing**: Always run `python manage.py test` before pushing changes.
-3. **Environment**: Keep `.env` strictly local; use `.env.example` for documentation.
-
----
-
-## 📝 License
-Proprietary / Internal Use for AIOS Project.
+## 🛡️ License
+AIOS Enterprise is proprietary software. All rights reserved.
