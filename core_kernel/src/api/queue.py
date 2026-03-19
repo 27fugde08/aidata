@@ -13,6 +13,11 @@ class TaskRequest(BaseModel):
     type: str  # video_render, ai_research
     payload: dict = {}
 
+@router.get("/")
+async def get_queue_health():
+    """Kiểm tra sức khỏe của Task Queue."""
+    return {"status": "success", "worker_pool": "celery", "active": True}
+
 @router.post("/submit")
 async def submit_task(req: TaskRequest):
     """

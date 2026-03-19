@@ -63,7 +63,7 @@ async def main():
                     print(f"📊 VIRAL SCORE: {clip.get('score', 0)}/100")
                     print(f"📂 CATEGORY: {clip.get('category', 'N/A')}")
                     print(f"💡 EXPLANATION: {clip.get('explanation', 'N/A')}")
-                    print(f"📁 ĐƯỜNG DẪN: spaceofduy/projects/youtube_shorts_automation/outputs/shorts/TIKTOK_{clip['name']}.mp4")
+                    print(f"📁 ĐƯỜNG DẪN: apps/youtube_shorts/outputs/shorts/TIKTOK_{clip['name']}.mp4")
                     print("--------------------------------------------------")
                 break
             elif status == "error":

@@ -1,7 +1,7 @@
 import os
 import asyncio
 from typing import Dict, Any, Optional
-from spaceofduy.projects.douyin_automation.backend.core.scraper import DouyinScraper
+from apps.douyin_automation.core.scraper import DouyinScraper
 
 class DouyinService:
     """

@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", "backend"))
 
 # Mock import các agent từ hệ thống chính (AIOS)
 # Trong thực tế, ta sẽ gọi qua API hoặc import trực tiếp từ backend trung tâm
-from spaceofduy.projects.youtube_shorts_automation_enterprise.backend.core.video_engine import YouTubeShortEngine
+from apps.youtube_shorts_enterprise.core.video_engine import YouTubeShortEngine
 
 # Giả lập Researcher Agent
 class TrendResearcher:

@@ -2,8 +2,8 @@ import os
 import asyncio
 import json
 from typing import List, Dict
-from spaceofduy.projects.youtube_shorts_automation.backend.database.db_manager import DatabaseManager
-from spaceofduy.projects.youtube_shorts_automation.backend.services.video_service import VideoService
+from apps.youtube_shorts.database.db_manager import DatabaseManager
+from apps.youtube_shorts.services.video_service import VideoService
 
 class ProjectService:
     def __init__(self):

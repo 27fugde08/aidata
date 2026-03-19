@@ -88,14 +88,14 @@ def home():
                 "deployment": "/api/v1/deploy",
                 "code_review": "/api/v1/review",
                 "command_center": "/api/v1/command",
-                "system_health": "/api/v1/system/health",
+                # "system_health": "/api/v1/system/health",
                 "event_stream": "/api/v1/system/stream"
             },
             "automation": {
                 "video_automation": "/api/v1/video",
-                "douyin": "/api/v1/douyin" if douyin_api else "Not Loaded",
-                "youtube_shorts": "/api/v1/youtube-shorts" if yt_shorts_rebuild_api else "Not Loaded",
-                "youtube_enterprise": "/api/v1/youtube-enterprise" if yt_enterprise_api else "Not Loaded"
+                "douyin": "/api/v1/douyin_automation",
+                "youtube_shorts": "/api/v1/youtube_shorts",
+                "youtube_enterprise": "/api/v1/youtube_shorts_enterprise"
             },
             "storage": {
                 "video_stream": "/api/video/stream/shorts"

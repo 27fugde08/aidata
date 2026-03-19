@@ -4,7 +4,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from spaceofduy.projects.youtube_shorts_automation.backend.api.shorts import router as shorts_router
+from apps.youtube_shorts.api.shorts import router as shorts_router
 
 app = FastAPI(
     title="YouTube Shorts Automation (Enterprise Rebuild)",

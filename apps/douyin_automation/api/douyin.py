@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from typing import Dict, List
-from spaceofduy.projects.douyin_automation.backend.models.douyin_models import DouyinVideoRequest, DouyinVideoResponse, DownloadRequest
-from spaceofduy.projects.douyin_automation.backend.services.douyin_service import DouyinService
+from apps.douyin_automation.models.douyin_models import DouyinVideoRequest, DouyinVideoResponse, DownloadRequest
+from apps.douyin_automation.services.douyin_service import DouyinService
 
-router = APIRouter(prefix="/douyin", tags=["Douyin"])
+router = APIRouter(tags=["Douyin"])
 douyin_service = DouyinService()
 
 @router.post("/info", response_model=DouyinVideoResponse)

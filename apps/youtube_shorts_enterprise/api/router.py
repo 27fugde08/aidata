@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Body
 from typing import Dict, Any
-from spaceofduy.projects.youtube_shorts_automation_enterprise.backend.core.video_engine import YouTubeShortEngine
+from apps.youtube_shorts_enterprise.core.video_engine import YouTubeShortEngine
 
-router = APIRouter(prefix="/yt-enterprise", tags=["YouTube Enterprise"])
+router = APIRouter(tags=["YouTube Enterprise"])
 engine = YouTubeShortEngine()
 
 @router.post("/create")

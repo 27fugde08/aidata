@@ -1,7 +1,7 @@
 import os
 from fastapi import APIRouter, Body, BackgroundTasks
 from typing import Dict, List
-from spaceofduy.projects.youtube_shorts_automation.backend.core.project_service import ProjectService
+from apps.youtube_shorts.core.project_service import ProjectService
 
 router = APIRouter()
 project_service = ProjectService()
@@ -67,7 +67,7 @@ async def merge_clips(data: Dict = Body(...)):
         return {"status": "error", "message": "Không tìm thấy clip nào hợp lệ để gộp."}
         
     try:
-        from spaceofduy.projects.youtube_shorts_automation.backend.services.video_service import VideoService
+        from apps.youtube_shorts.services.video_service import VideoService
         vs = VideoService()
         merged_path = await vs.concatenate_clips(valid_paths, output_name)
         return {"status": "success", "video_url": f"/outputs/{output_name}.mp4"}

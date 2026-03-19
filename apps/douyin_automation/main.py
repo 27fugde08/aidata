@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from spaceofduy.projects.douyin_automation.backend.api import douyin
+from apps.douyin_automation.api import douyin
 
 app = FastAPI(
     title="Douyin Real Video Downloader API",

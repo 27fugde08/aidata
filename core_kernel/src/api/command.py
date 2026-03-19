@@ -4,7 +4,7 @@ from typing import Dict, Any, List
 from core.command_parser import CommandParser
 from core.task_queue.queue import TaskQueue
 
-router = APIRouter(prefix="/api/command", tags=["AIOS Command System"])
+router = APIRouter(tags=["AIOS Command System"])
 task_queue = TaskQueue()
 
 class CommandRequest(BaseModel):

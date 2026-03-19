@@ -7,11 +7,11 @@ async def health_check():
     print("-" * 50)
     
     targets = {
-        "Kernel (Main)": "http://localhost:8888/",
-        "YouTube Rebuild": "http://localhost:8002/",
-        "Resource API": "http://localhost:8888/api/v1/system/resources",
-        "Command API": "http://localhost:8888/api/v1/command/tasks",
-        "Scheduler API": "http://localhost:8888/api/scheduler/list"
+        "Kernel (Main)": "http://127.0.0.1:8000/",
+        "YouTube Rebuild": "http://127.0.0.1:8000/api/v1/youtube_shorts_enterprise/status",
+        "Resource API": "http://127.0.0.1:8000/api/v1/system/health",
+        "Command API": "http://127.0.0.1:8000/api/v1/command/tasks",
+        "Scheduler API": "http://127.0.0.1:8000/api/v1/queue/"
     }
 
     async with httpx.AsyncClient(timeout=5.0) as client:

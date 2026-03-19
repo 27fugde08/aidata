@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Body, HTTPException
 from typing import Dict, Any
-from spaceofduy.projects.youtube_shorts_automation.backend.core.video_service import YouTubeShortsService
+from apps.youtube_shorts.core.video_service import YouTubeShortsService
 
-router = APIRouter(prefix="/v1/shorts", tags=["YouTube Shorts"])
+router = APIRouter(tags=["YouTube Shorts"])
 service = YouTubeShortsService()
 
 @router.post("/process-viral")

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Body
 from typing import Dict, List
-from spaceofduy.projects.youtube_shorts_automation.backend.services.video_service import VideoService
+from apps.youtube_shorts.services.video_service import VideoService
 
 router = APIRouter()
 video_service = VideoService()
