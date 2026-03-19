@@ -1,9 +1,8 @@
 import axios from "axios";
 
 // Environment-aware API URL
-// In Docker, this usually talks to the backend service, but for client-side fetches
-// it needs to be the public URL.
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+const API_URL = `${BACKEND_URL}/api/v1`;
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -11,6 +10,8 @@ export const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+export { BACKEND_URL };
 
 export const runAgent = async (prompt: string) => {
   const { data } = await api.post("/agent/run", { prompt });

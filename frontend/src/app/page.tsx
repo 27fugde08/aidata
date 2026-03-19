@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Send, Bot, User, Loader2, Sparkles, Database, CheckCircle, XCircle, Clock } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { runAgent, fetchTasks, fetchAgents } from "@/lib/api";
+import { runAgent, fetchTasks, fetchAgents, BACKEND_URL } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -29,8 +29,8 @@ export default function Home() {
   // Mock agents list - in real app, fetch from backend
   const agents: Agent[] = [
     { name: "Research Agent", description: "Searches the web and summarizes info", status: "active" },
+    { name: "Video Translator", description: "Download, translate & add subtitles", status: "active" },
     { name: "Code Agent", description: "Writes and debugs code", status: "active" },
-    { name: "Media Agent", description: "Analyzes images and videos", status: "inactive" },
   ];
 
   const scrollToBottom = () => {
@@ -213,7 +213,23 @@ export default function Home() {
                         </div>
                     </CardHeader>
                     <CardContent className="p-3 pt-2">
-                        {task.result ? (
+                        {task.result?.video_url ? (
+                            <div className="space-y-2">
+                                <video 
+                                    src={`${BACKEND_URL}${task.result.video_url}`} 
+                                    controls 
+                                    className="w-full rounded-md border bg-black shadow-inner"
+                                />
+                                <a 
+                                    href={`${BACKEND_URL}${task.result.video_url}`} 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="text-[10px] text-primary hover:underline block text-center"
+                                >
+                                    Download Processed Video
+                                </a>
+                            </div>
+                        ) : task.result ? (
                              <div className="bg-muted p-2 rounded text-xs font-mono overflow-x-auto max-h-32">
                                 {JSON.stringify(task.result, null, 2)}
                              </div>

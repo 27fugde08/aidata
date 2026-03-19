@@ -52,6 +52,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+      - ./storage:/app/storage
     networks:
       - aios-network
     restart: unless-stopped
@@ -77,6 +78,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+      - ./storage:/app/storage
     networks:
       - aios-network
     restart: unless-stopped

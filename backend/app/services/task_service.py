@@ -33,6 +33,16 @@ class TaskService:
         logger.info(f"Triggered process_task_job for task_id: {task_id}")
         return {"task_id": task_id, "status": "processing_queued"}
 
+    async def trigger_video_translation(self, task_id: int):
+        """Pushes video translation job to Redis queue."""
+        task = await self.get_task(task_id)
+        if not task:
+            return {"error": f"Task {task_id} not found."}
+        
+        celery_app.send_task("tasks.process_video_translation", args=[task_id])
+        logger.info(f"Triggered process_video_translation for task_id: {task_id}")
+        return {"task_id": task_id, "status": "translation_queued"}
+
     async def get_task_status_info(self, task_id: int):
         task = await self.get_task(task_id)
         if not task:

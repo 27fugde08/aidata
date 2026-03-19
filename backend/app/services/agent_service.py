@@ -43,9 +43,18 @@ class AgentService:
             logger.info(f"AI Tool Call: get_task_status({task_id})")
             return await self.task_service.get_task_status_info(task_id)
 
+        async def translate_video(task_id: int):
+            """
+            Translates and adds subtitles to a video using the automated pipeline.
+            Args:
+                task_id: The ID of the task to translate
+            """
+            logger.info(f"AI Tool Call: translate_video({task_id})")
+            return await self.task_service.trigger_video_translation(task_id)
+
         self.model = genai.GenerativeModel(
             model_name=settings.GEMINI_MODEL,
-            tools=[create_task, process_task, get_task_status]
+            tools=[create_task, process_task, get_task_status, translate_video]
         )
         self.chat = self.model.start_chat(enable_automatic_function_calling=True)
 

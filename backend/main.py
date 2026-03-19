@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.api.v1.api import api_router
 from app.db.session import engine
 from app.models.all_models import Base
+import os
 import asyncio
 
 async def init_db():
@@ -15,6 +17,12 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+# Ensure storage directory exists
+os.makedirs("/app/storage", exist_ok=True)
+
+# Mount static files
+app.mount("/storage", StaticFiles(directory="/app/storage"), name="storage")
 
 # Set all CORS enabled origins
 app.add_middleware(
