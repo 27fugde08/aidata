@@ -1,107 +1,109 @@
-# AIOS Enterprise v2.2.0 (Day 2 Update)
+# 🤖 AIOS Enterprise v3.0 (Refactored & Optimized)
 
-## 🧠 AIOS: Autonomous Operating System for AI Agents
-**AIOS** is a modular, kernel-based operating system designed to orchestrate independent AI apps (microservices) into a unified automation ecosystem.
-
----
-
-## 🚀 Key Features (v2.2.0)
-- **Modular Monorepo:** Separate `core` and `apps` architecture.
-- **Micro-Kernel Architecture:** Apps run as independent Docker containers, controlled by the AIOS Kernel.
-- **Dynamic App Discovery:** The Kernel automatically discovers and integrates available apps.
-- **Task Queue & Orchestration:** Centralized command center for managing complex, multi-step missions.
-- **Independent Control:** Run AIOS as a standalone orchestrator that controls all satellite projects.
+**AIOS Enterprise** is a high-performance, modular AI Automation Operating System designed to orchestrate AI agents, manage complex background tasks, and provide a seamless real-time user experience.
 
 ---
 
-## 🛠️ Architecture Overview
+## 🚀 Key Features
 
-The system is composed of the following independent services:
-
-1.  **AIOS Kernel (`aios-kernel`):** The central brain, API gateway, and orchestrator.
-2.  **AIOS Worker Swarm (`aios-worker`):** Scalable Celery workers for heavy tasks.
-3.  **Redis (`aios-redis`):** Message broker for inter-service communication.
-4.  **YouTube Shorts (`aios-app-youtube`):** Independent service for YouTube Shorts automation.
-5.  **YouTube Enterprise (`aios-app-youtube-ent`):** Enterprise-grade video engine.
-
----
-
-## 📦 Installation & Usage (Docker)
-
-The recommended way to run AIOS Enterprise is via Docker Compose. This ensures all apps run in isolated environments with their specific dependencies.
-
-### Prerequisites
-- Docker & Docker Compose
-- Python 3.10+ (for local development)
-
-### 1. Build and Run All Services
-```bash
-docker-compose up --build -d
-```
-
-This will start:
-- **Kernel API:** http://localhost:8000
-- **YouTube Service:** http://localhost:8002
-- **Enterprise Service:** http://localhost:8003
-
-### 2. Check System Health
-You can check the status of the entire ecosystem via the Kernel:
-```bash
-curl http://localhost:8000/api/v1/system/health
-```
-
-### 3. Independent Control Mode
-To demonstrate AIOS controlling other apps programmatically, run the provided script:
-```bash
-python scripts/aios_independent_control.py
-```
-This script connects to the Kernel and instructs it to orchestrate tasks across the available apps.
+- **Modular Backend:** Clean architecture with separation of concerns: `api`, `core`, `db`, `models`, `repositories`, `schemas`, and `services`.
+- **Modern Frontend:** Built with **Next.js 14**, **Tailwind CSS**, and **React Query** for real-time task status polling and a polished UI.
+- **Background Processing:** **Celery + Redis** integration for handling heavy tasks like media analysis and automated workflows.
+- **Robust Database:** **PostgreSQL** with **Alembic** for version-controlled schema migrations.
+- **AI Integration:** Powered by **Google Gemini AI** with dynamic function calling to interact with system services.
+- **Dockerized Environment:** One-command deployment for the entire stack (Database, Redis, Backend, Worker, Frontend).
 
 ---
 
-## 🔧 Local Development (Without Docker)
+## 🛠️ Technology Stack
 
-If you prefer to run components manually:
-
-1.  **Install Dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-2.  **Start the Kernel:**
-    ```bash
-    python manage.py runserver
-    ```
-
-3.  **Run an App Independently:**
-    ```bash
-    cd apps/youtube
-    uvicorn main:app --port 8002
-    ```
+| Component | Technology |
+| :--- | :--- |
+| **Backend** | Python, FastAPI, SQLAlchemy 2.0, Pydantic v2 |
+| **Frontend** | TypeScript, Next.js, Tailwind CSS, Lucide Icons |
+| **Database** | PostgreSQL 15, Alembic |
+| **Task Queue** | Celery, Redis |
+| **AI Engine** | Google Gemini (Generative AI) |
+| **DevOps** | Docker, Docker Compose |
 
 ---
 
-## 📂 Directory Structure
+## 📂 Project Structure
 
-```
+```text
 .
-├── apps/                   # Modular Applications (Microservices)
-│   ├── youtube/            # YouTube Shorts App
-│   ├── youtube_ent/        # Enterprise Video Engine
-│   └── ...
-├── core/                   # AIOS Central Kernel
-│   ├── api/                # Kernel API Endpoints
-│   ├── shared/             # Shared Configuration & Utilities
-│   └── ...
-├── storage/                # Centralized Persistent Data
-│   ├── db/                 # Databases
-│   ├── logs/               # System Logs
-│   └── outputs/            # Generated Media
-├── docker/                 # Deployment Configurations
-└── manage.py               # Unified Entry Point CLI
+├── backend/                # FastAPI Application
+│   ├── app/                # Main Application Logic
+│   │   ├── api/            # API Endpoints (v1)
+│   │   ├── core/           # Configuration & Celery Setup
+│   │   ├── db/             # Database Session Management
+│   │   ├── models/         # SQLAlchemy Models
+│   │   ├── repositories/   # Data Access Layer
+│   │   ├── schemas/        # Pydantic Schemas
+│   │   ├── services/       # Business Logic & AI Agents
+│   │   └── tasks/          # Celery Task Handlers
+│   ├── alembic/            # Database Migrations
+│   └── main.py             # Entry Point
+├── frontend/               # Next.js Application
+│   ├── src/                # Source Code
+│   │   ├── app/            # Next.js App Router (Pages & Layout)
+│   │   ├── components/     # UI Components (Shadcn/UI based)
+│   │   ├── lib/            # API Client & Utils
+│   │   └── types/          # TypeScript Interfaces
+│   └── tailwind.config.ts  # Theme Configuration
+├── docker-compose.yml      # Orchestration Config
+└── start.sh                # Deployment Script (Bash)
 ```
 
 ---
 
-## 🛡️ License
-AIOS Enterprise is proprietary software. All rights reserved.
+## ⚡ Quick Start
+
+### 1. Prerequisites
+- **Docker & Docker Compose** installed.
+- **Gemini API Key** from [Google AI Studio](https://aistudio.google.com/).
+
+### 2. Environment Setup
+Create a `.env` file in the root directory:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+### 3. Build and Run
+Run the automated start script (Linux/macOS):
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+**Or run manually (Windows/All):**
+```powershell
+# 1. Start containers
+docker-compose up -d --build
+
+# 2. Run database migrations
+docker-compose exec backend alembic upgrade head
+```
+
+### 4. Access the Apps
+- **Frontend UI:** [http://localhost:3000](http://localhost:3000)
+- **Backend API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
+## 🇻🇳 Hướng Dẫn Sử Dụng (Vietnamese)
+
+### Cài đặt nhanh
+1. Sao chép khóa API Gemini vào file `.env`.
+2. Chạy lệnh `docker-compose up -d --build`.
+3. Chạy lệnh migrate database: `docker-compose exec backend alembic upgrade head`.
+
+### Chức năng chính
+- **Chat với AI:** Gửi yêu cầu bằng ngôn ngữ tự nhiên (ví dụ: "Phân tích video này: [URL]").
+- **Theo dõi Task:** Danh sách task bên phải sẽ tự động cập nhật trạng thái (Pending -> Processing -> Completed).
+- **Xem kết quả:** Click vào task để xem dữ liệu chi tiết (Metadata video, kết quả phân tích).
+
+---
+
+## 🛡️ License & Credits
+AIOS Enterprise is maintained by the AIOS Development Team. All rights reserved.
